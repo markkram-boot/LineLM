@@ -8,7 +8,8 @@ from model.dataloader_mlm import TwoDimensionalDatasetWithSEQForMLM
 from model.bert_pretrain import MaskedBERT
 from utils import load_linestring_from_geojson_for_pretrain
 
-input_file = "./data/target_trajectory_train_pretrain_rotate_flip_shift3.geojson"
+
+input_file = "./data/pretrain/target_line_pretrain.geojson"
 input_sequences = load_linestring_from_geojson_for_pretrain(input_file)
 vocab_size = 500 
 max_len = 130
@@ -16,11 +17,14 @@ saved_model_dir = './trained_weights/pretrain_trainset_large'
 os.makedirs(saved_model_dir, exist_ok=True)
 print(input_sequences[0])
 
+
 # Define dataset
 dataset = TwoDimensionalDatasetWithSEQForMLM(input_sequences, max_len=max_len, max_id=vocab_size, mask_prob=0.15)
 
+
 # Define dataloader
 dataloader = DataLoader(dataset, batch_size=260, shuffle=True)
+
 
 # Initialize MaskedBERT model
 model = MaskedBERT(
@@ -32,6 +36,7 @@ model = MaskedBERT(
     max_position_embeddings=max_len
 )
 
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if torch.cuda.device_count() > 1:
     print(f"Using {torch.cuda.device_count()} GPUs for training!")
@@ -39,13 +44,17 @@ if torch.cuda.device_count() > 1:
 model.to(device)
 
 
+
+
 # Define optimizer and scheduler
 optimizer = AdamW(model.parameters(), lr=5e-5)
 num_training_steps = len(dataloader) * 50  # 50 epochs
 scheduler = get_scheduler("linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps)
 
+
 # Define loss function
 loss_fn = torch.nn.CrossEntropyLoss(ignore_index=dataset.pad_token_id)
+
 
 # Training loop
 epochs = 400
@@ -66,9 +75,11 @@ for epoch in range(epochs):
 #         print(f"Max input_ids_y: {input_ids_y.max().item()}, Num embeddings: {model.embedding_y.num_embeddings}")
         actual_model = model.module if torch.cuda.device_count() > 1 else model
 
+
         # Get vocab sizes
         vocab_size_x = actual_model.embedding_x.num_embeddings
         vocab_size_y = actual_model.embedding_y.num_embeddings
+
 
         # Check for invalid token indices
         invalid_x = (input_ids_x >= vocab_size_x).any().item()
@@ -84,21 +95,25 @@ for epoch in range(epochs):
         logits_x, logits_y = \
             model(input_ids_x=input_ids_x, input_ids_y=input_ids_y, attention_mask=(input_ids_x != dataset.pad_token_id))
 
+
          # Reshape logits and labels for loss computation
         logits_x = logits_x.view(-1, logits_x.size(-1))
         logits_y = logits_y.view(-1, logits_y.size(-1))
         labels_x = labels_x.view(-1)
         labels_y = labels_y.view(-1)
 
+
         # Compute loss
         loss_x = loss_fn(logits_x, labels_x)
         loss_y = loss_fn(logits_y, labels_y)
         loss = (loss_x + loss_y) / 2
 
+
         # Backward pass
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
 
         total_loss += loss.item()
         
@@ -106,18 +121,23 @@ for epoch in range(epochs):
         preds_x = logits_x.argmax(dim=-1)
         preds_y = logits_y.argmax(dim=-1)
 
+
         mask_x = labels_x != dataset.pad_token_id
         mask_y = labels_y != dataset.pad_token_id
+
 
         total_correct_x += (preds_x == labels_x).masked_select(mask_x).sum().item()
         total_correct_y += (preds_y == labels_y).masked_select(mask_y).sum().item()
 
+
         total_tokens_x += mask_x.sum().item()
         total_tokens_y += mask_y.sum().item()
+
 
     avg_loss = total_loss / len(dataloader)
     accuracy_x = total_correct_x / total_tokens_x if total_tokens_x > 0 else 0
     accuracy_y = total_correct_y / total_tokens_y if total_tokens_y > 0 else 0
+
 
     print(f"Epoch {epoch + 1}/{epochs}, Loss: {avg_loss:.4f}, Accuracy X: {accuracy_x:.4f}, Accuracy Y: {accuracy_y:.4f}")
     
