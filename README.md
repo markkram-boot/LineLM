@@ -103,7 +103,7 @@ mkdir data/
 Place your GeoJSON files for pretraining in the `data/` directory.
 Place your input and ground truth GeoJSON files for fine-tuning in the `data/` directory.
 
-You can download the GeoJSON files for both pretraining and fine-tuning from [this link]([https://example.com/linelm-data](https://drive.google.com/drive/folders/1of4o8HmkL5kuBJghoU_i8doujeG97ELr?usp=sharing)).
+You can download the GeoJSON files for both pretraining and fine-tuning from [this link](https://drive.google.com/drive/folders/1of4o8HmkL5kuBJghoU_i8doujeG97ELr?usp=sharing).
 
 
 ### 2. Pre-training
@@ -152,7 +152,6 @@ python fine_tune_large.py
 **Input Format**: Sequences of coordinate pairs  
 **Output Format**: Refined coordinate sequences  
 **License**: MIT  
-**Paper**: [Link to paper when available]
 
 **Notes**: 
 - Maximum sequence length: 512 coordinate pairs
