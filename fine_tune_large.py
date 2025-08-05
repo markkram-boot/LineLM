@@ -10,8 +10,10 @@ import os
 from torch.nn import DataParallel
 from collections import OrderedDict
 
+
 # Set specific GPUs
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+
 
 # Create dataset
 max_len = 130 
@@ -19,27 +21,34 @@ max_id = 500
 epochs = 200
 batch_size = 70
 
+
 # Load Dataset and DataLoader
-input_file = "./data/input_trajectory_train_eval_finetune_iterative.geojson"
-target_file = "./data/target_trajectory_train_eval_finetune_iterative.geojson"
-pretrained_weights = "/data/weiweidu/line_summarization_single_lines/trained_weights/trainevalset_pretrain_finetune_large_model_iterative_sum/two_dimensional_bert_transformer_e51.pth"
-s_epoch = 51
-saved_dir = "./trained_weights/trainevalset_pretrain_finetune_large_model_iterative_sum"
+input_file = "./data/fine_tune/input_line_finetune.geojson"
+target_file = "./data/fine_tune/target_line_finetune.geojson"
+pretrained_weights = None
+s_epoch = 0
+saved_dir = "./trained_weights/fine_tune_large"
 os.makedirs(saved_dir, exist_ok=True)
 
-encoder_pretrained_weights = None #"/data/weiweidu/line_summarization_single_lines/trained_weights/pretrain_trainset_large/bert_pretrain_e240.pth"
+
+encoder_pretrained_weights ="./trained_weights/LineLM_pretrain.pth"
+
 
 input_sequences, _, _ = load_linestring_from_geojson_for_finetune(input_file)
 target_sequences, _, _ = load_linestring_from_geojson_for_finetune(target_file)
 
+
 dataset = TwoDimensionalDatasetWithSEQ(input_sequences, target_sequences, max_len, max_id)
+
 
 # Create DataLoader
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
+
 # Model Initialization
 vocab_size_x = max_id + 5
 vocab_size_y = max_id + 5
+
 
 model = TwoDimensionalBERTTransformer(
     vocab_size_x=vocab_size_x,
@@ -54,6 +63,8 @@ model = TwoDimensionalBERTTransformer(
 )
 
 
+
+
 # Check if multiple GPUs are available
 if torch.cuda.device_count() > 1:
     print(f"Using {torch.cuda.device_count()} GPUs")
@@ -61,6 +72,7 @@ if torch.cuda.device_count() > 1:
 # Move model to device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device) 
+
 
 if pretrained_weights is not None:
     print('Resume the fine-tune')
@@ -73,6 +85,7 @@ if pretrained_weights is not None:
         model.load_state_dict(new_state_dict)
     else:
         model.load_state_dict(torch.load(pretrained_weights))
+
 
 # Load pretrained weights into the encoder only
 elif encoder_pretrained_weights is not None:
@@ -88,9 +101,11 @@ elif encoder_pretrained_weights is not None:
     else:
         model.encoder.load_state_dict(encoder_dict, strict=False)
 
+
 encoder_params = model.module.encoder.parameters()
 decoder_params = list(model.module.decoder.parameters())\
                 + list(model.module.output_x.parameters()) + list(model.module.output_y.parameters())
+
 
 # Set up separate parameter groups
 param_groups = [
@@ -98,10 +113,13 @@ param_groups = [
     {'params': decoder_params, 'lr': 5e-5}
 ]
 
+
 # Initialize the optimizer
 optimizer = torch.optim.Adam(param_groups)
 
+
 loss_fn = nn.CrossEntropyLoss(ignore_index=max_id+1)
+
 
 # Define tokenizer with special token IDs
 tokenizer = {
@@ -110,6 +128,7 @@ tokenizer = {
     "eos_token_id": max_id + 3,
     "seq_token_id": max_id + 4,
 }
+
 
 for epoch in range(s_epoch, epochs):
     model.train()
@@ -125,6 +144,7 @@ for epoch in range(s_epoch, epochs):
 #         print(input_ids_x.shape, labels_x.shape, decoder_input_ids_x.shape)
 #         print(input_ids_y.shape, labels_y.shape, decoder_input_ids_y.shape)
 
+
         if isinstance(model, torch.nn.DataParallel):
             # Check for out-of-bound token IDs
             vocab_size_x = model.module.embedding_x.num_embeddings
@@ -134,8 +154,10 @@ for epoch in range(s_epoch, epochs):
             vocab_size_x = model.embedding_x.num_embeddings
             vocab_size_y = model.embedding_y.num_embeddings
 
+
         invalid_x = (input_ids_x >= vocab_size_x).any().item()
         invalid_y = (input_ids_y >= vocab_size_y).any().item()
+
 
         if invalid_x:
             print("Error: input_ids_x contains out-of-bound indices")
@@ -156,6 +178,7 @@ for epoch in range(s_epoch, epochs):
             decoder_input_ids_y=decoder_input_ids_y,
         )
 
+
         logits_x = logits_x.view(-1, logits_x.size(-1))
         logits_y = logits_y.view(-1, logits_y.size(-1))
         labels_x = labels_x.view(-1)
@@ -165,11 +188,13 @@ for epoch in range(s_epoch, epochs):
         predicted_ids_x = torch.argmax(logits_x, dim=-1)  # (batch_size * seq_len)
         predicted_ids_y = torch.argmax(logits_y, dim=-1)  # (batch_size * seq_len)
 
+
         # Example: Calculate accuracy (optional for debugging)
         correct_x = (predicted_ids_x == labels_x).sum().item()
         correct_y = (predicted_ids_y == labels_y).sum().item()
         total_x = labels_x.ne(tokenizer["pad_token_id"]).sum().item()  # Exclude padding
         total_y = labels_y.ne(tokenizer["pad_token_id"]).sum().item()  # Exclude padding
+
 
         accuracy_x = correct_x / total_x if total_x > 0 else 0
         accuracy_y = correct_y / total_y if total_y > 0 else 0
@@ -183,7 +208,7 @@ for epoch in range(s_epoch, epochs):
     print(f"Epoch {epoch + 1}: Loss = {total_loss / len(dataloader)}, Accuracy X: {accuracy_x:.4f}, Accuracy Y: {accuracy_y:.4f}")
     if (epoch+1)%1 == 0:
         if isinstance(model, torch.nn.DataParallel):
-            torch.save(model.module.state_dict(), f"{saved_dir}/two_dimensional_bert_transformer_e{epoch+1}.pth")
+            torch.save(model.module.state_dict(), f"{saved_dir}/LineLM_fine_tune_e{epoch+1}.pth")
         else:
-            torch.save(model.state_dict(), f"{saved_dir}/two_dimensional_bert_transformer_e{epoch+1}.pth")
+            torch.save(model.state_dict(), f"{saved_dir}/LineLM_fine_tune_e{epoch+1}.pth")
         print("Model training complete and saved.")
