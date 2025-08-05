@@ -202,25 +202,6 @@ python fine_tune_large.py
 
 To run inference on new vector line data:
 
-
-```bash
-python iterative_inference.py --iteration <iteration_number> \
-    --map_dir <path_to_map_directory> \
-    --map_name <map_name> \
-    --out_geojson_dir <output_directory> \
-    --model_version <model_version_number>
-```
-
-
-### Parameters:
-- `--iteration`: Iteration number for the inference process
-- `--map_dir`: Directory containing the input map data
-- `--map_name`: Name of the specific map to process
-- `--out_geojson_dir`: Output directory for generated GeoJSON files
-- `--model_version`: Version number of the trained model to use
-
-
-### Example:
 ```bash
 python iterative_inference.py \
     --iteration 1 \
@@ -235,10 +216,6 @@ python iterative_inference.py \
 ### Inference Data
 You can download the GeoJSON files for inference from [this link](https://drive.google.com/drive/folders/1QHs0uDjItz47S_q8X3MoCzeJwuL61lF9?usp=sharing).
 
-
-
-
-## Troubleshooting
 
 
 ### Common Issues
