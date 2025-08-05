@@ -103,7 +103,7 @@ mkdir data/
 Place your GeoJSON files for pretraining in the `data/` directory.
 Place your input and ground truth GeoJSON files for fine-tuning in the `data/` directory.
 
-You can download the GeoJSON files for both pretraining and fine-tuning from [this link](https://example.com/linelm-data).
+You can download the GeoJSON files for both pretraining and fine-tuning from [this link]([https://example.com/linelm-data](https://drive.google.com/drive/folders/1of4o8HmkL5kuBJghoU_i8doujeG97ELr?usp=sharing)).
 
 
 ### 2. Pre-training
@@ -139,8 +139,8 @@ python fine_tune_large.py
 
 | Model | Description | Download Link | Size |
 |-------|-------------|---------------|------|
-| Pretrain| BERT encoder pre-trained on vector lines | [Download](https://huggingface.co/criticalmaas/linelm-base) | 440MB |
-| Fine-tune | Large model fine-tuned for line refinement | [Download](https://huggingface.co/criticalmaas/linelm-large) | 1.3GB |
+| Pretrain| BERT encoder pre-trained on vector lines | [Download]([https://huggingface.co/criticalmaas/linelm-base](https://drive.google.com/file/d/1URW3_fCFvG2n8tBJzoZaA6a8pPAUwpoD/view?usp=sharing)) | 642.7MB |
+| Fine-tune | Large model fine-tuned for line refinement | [Download]([https://huggingface.co/criticalmaas/linelm-large](https://drive.google.com/file/d/1oyG5gUpbNfkEiF08WofpGyZMsDEyrFUo/view?usp=sharing)) | 1.13GB |
 
 ### Model Card
 
@@ -187,7 +187,7 @@ python iterative_inference.py --iteration 1 \
     --model_version 140
 ```
 ### Inference Data
-You can download the GeoJSON files for inference from [this link](https://example.com/linelm-data).
+You can download the GeoJSON files for inference from [this link]([https://example.com/linelm-data](https://drive.google.com/drive/folders/1QHs0uDjItz47S_q8X3MoCzeJwuL61lF9?usp=sharing)).
 
 
 ## Troubleshooting
