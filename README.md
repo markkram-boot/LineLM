@@ -202,6 +202,7 @@ python fine_tune_large.py
 
 To run inference on new vector line data:
 
+
 ```bash
 python iterative_inference.py \
     --iteration 1 \
@@ -213,9 +214,26 @@ python iterative_inference.py \
     --model_version 100 \
     --cuda 1
 ```
+### Parameters Explained
+- `--iteration`: Specifies which iteration of the inference process
+- `--map_dir`: Directory containing base map files
+- `--in_geojson_dir`: Input directory with GeoJSON files to process
+- `--out_geojson_dir`: Output directory where results will be saved
+- `--in_geojson_name`: Name of the input GeoJSON file (without extension)
+- `--map_name`: Name of the base map to use for inference
+- `--model_version`: Specific version of the LineLM to use, default is None
+- `--cuda`: Enables GPU acceleration, default is using CUDA device 1
+
+
+
+
 ### Inference Data
 You can download the GeoJSON files for inference from [this link](https://drive.google.com/drive/folders/1QHs0uDjItz47S_q8X3MoCzeJwuL61lF9?usp=sharing).
 
+
+
+
+## Troubleshooting
 
 
 ### Common Issues
