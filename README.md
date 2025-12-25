@@ -63,6 +63,26 @@ numpy
 tqdm
 shapely
 opencv-python
+gdown>=5.2.0
+scipy
+geojson
+fiona>=1.8.0
+geopandas>=0.10.0
+```
+
+### Using Poetry (Recommended)
+
+This project uses [Poetry](https://python-poetry.org/) for dependency management. Install dependencies using:
+
+```bash
+# Install Poetry if you haven't already
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Install project dependencies
+poetry install
+
+# Activate the virtual environment
+poetry shell
 ```
 
 
