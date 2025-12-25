@@ -1,0 +1,43 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "linelm"
+version = "1.0.0"
+description = "A transformer-based model for processing and generating vector single-lines"
+readme = "README.md"
+license = "MIT"
+authors = ["LineLM Team"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+torch = ">=1.9.0"
+transformers = ">=4.0.0"
+torchaudio = "*"
+torchvision = "*"
+numpy = "*"
+tqdm = "*"
+shapely = "*"
+opencv-python = "*"
+gdown = "^5.2.0"
+scipy = "*"
+geojson = "*"
+fiona = ">=1.8.0"
+geopandas = ">=0.10.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=6.0"
+black = "*"
+flake8 = "*"
+isort = "*"
+mypy = "*"
+
+[tool.black]
+line-length = 88
+target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
