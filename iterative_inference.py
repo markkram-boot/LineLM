@@ -1,6 +1,5 @@
 import os
 import argparse
-from inference_on_patch_large_model_v1 import inference
 from inference_on_patch_large_model_multiprocess import inference_multiprocess
 from stitch_lines_on_map import stitch_results_on_patches, stitch_results_on_patches_multiprocess
 from remove_dangling_lines_on_map import remove_dangling_lines_from_geojson as remove_dangling_lines
