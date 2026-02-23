@@ -51,26 +51,7 @@ LineLM/
 ```
 
 
-## Requirements
-
-
-```bash
-torch>=1.9.0
-transformers>=4.0.0
-torch-audio
-torch-vision
-numpy
-tqdm
-shapely
-opencv-python
-gdown>=5.2.0
-scipy
-geojson
-fiona>=1.8.0
-geopandas>=0.10.0
-```
-
-### Using Poetry (Recommended)
+## Environment Setup Using Poetry 
 
 This project uses [Poetry](https://python-poetry.org/) for dependency management. Install dependencies using:
 
