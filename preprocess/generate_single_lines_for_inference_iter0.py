@@ -167,7 +167,7 @@ def filter_linestrings_within_bbox_input(geojson_file, bbox, shift_threshold=150
 
     return filtered_lines, (x_translation, y_translation)
 
-def save_paths_to_geojson(paths_list, tr_xs, tr_ys, patch_xs, patch_ys, output_file):
+def save_paths_to_geojson(paths_list, tr_xs, tr_ys, patch_xs, patch_ys, reference_lines, output_file):
     """
     Save paths as a MultiLineString into a GeoJSON file.
 
@@ -193,7 +193,8 @@ def save_paths_to_geojson(paths_list, tr_xs, tr_ys, patch_xs, patch_ys, output_f
                     "tr_x": tr_xs[i],
                     "tr_y": tr_ys[i],
                     "patch_x": patch_xs[i],
-                    "patch_y": patch_ys[i]
+                    "patch_y": patch_ys[i],
+                    "reference_line": list(reference_lines[i].coords)
                 }
             }
         existing_features.append(feat)
@@ -207,7 +208,7 @@ def save_paths_to_geojson(paths_list, tr_xs, tr_ys, patch_xs, patch_ys, output_f
 
     print(f"Paths saved as MultiLineString to {output_file}")
     
-def filter_linestrings_within_buffer(target_line, lines_list, buffer_distance):
+def filter_linestrings_within_buffer(target_line, lines_list, buffer_distance, intersect_distance_threshold=0):
     """
     Given a LineString A and a list of LineStrings B, buffer A and return all LineStrings in B within the buffered A.
 
@@ -234,7 +235,7 @@ def filter_linestrings_within_buffer(target_line, lines_list, buffer_distance):
         if line.intersects(buffered_area):  # Check if the line intersects with the buffer
             intersection = line.intersection(buffered_area)  # Get the intersecting portion           
             # Compute intersection length (only valid if intersection is a LineString or MultiLineString)
-            if intersection.length > 0: # include small branches:
+            if intersection.length / line.length > intersect_distance_threshold:  # include small branches:
                 filtered_lines.append(line)
     length = sum([l.length for l in filtered_lines])
 
@@ -620,6 +621,7 @@ def process_geojson_to_paths(input_geojson_file, map_file, save_input_geojson_pa
     input_traj_list = []
     tr_x_list, tr_y_list = [], []
     patch_x_list, patch_y_list = [], []
+    ref_lines = []
     referece_lines = get_buffer_zones((250,0), (250,500), angle_interval=5, shift_interval=10)
     
 #     plain_image = np.ones((500,500,3)) * 255
@@ -667,9 +669,10 @@ def process_geojson_to_paths(input_geojson_file, map_file, save_input_geojson_pa
                 tr_y_list.append(tr_y)
                 patch_x_list.append(x)
                 patch_y_list.append(y)
+                ref_lines.append(ref_ln)
 #                 print(cnt)
                 cnt += 1
-    save_paths_to_geojson(input_traj_list, tr_x_list, tr_y_list, patch_x_list, patch_y_list, save_input_geojson_path)
+    save_paths_to_geojson(input_traj_list, tr_x_list, tr_y_list, patch_x_list, patch_y_list, ref_lines, save_input_geojson_path)
 
 if __name__ == "__main__": 
     input_dir = "/data/weiweidu/criticalmaas_data/eval_15month_line_results/geojson"
