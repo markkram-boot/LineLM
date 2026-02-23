@@ -13,6 +13,7 @@ from shapely.ops import snap, split, unary_union, linemerge
 from shapely.strtree import STRtree
 from collections import deque
 from preprocess.generate_single_lines_for_inference_iter0 import filter_linestrings_within_buffer
+from process_data.spatial_constraint_operators import cal_length_similarity_input_output, max_curvature_segment_length
 
 PATCH_SIZE=500
 
@@ -406,7 +407,7 @@ def deduplicate_linestring_groups(groups):
 
     return unique
 # Main Workflow
-def process_geojson_to_paths(input_geojson_file, map_file, save_input_geojson_path,\
+def process_geojson_to_paths(input_geojson_file, extract_geojson_file, map_file, save_input_geojson_path,\
                              stride=500, patch_size=500, dim_threshold=3000):
     """
     Process a GeoJSON file to construct paths from LineStrings.
@@ -417,7 +418,6 @@ def process_geojson_to_paths(input_geojson_file, map_file, save_input_geojson_pa
     Returns:
     - List of LineStrings representing the paths.
     """
-    
     map_image = cv2.imread(map_file)
     h, w, _ = map_image.shape
     
@@ -432,7 +432,16 @@ def process_geojson_to_paths(input_geojson_file, map_file, save_input_geojson_pa
             input_roi = [x, y, x+patch_size, y+patch_size]
             input_line_list, (tr_x, tr_y) = filter_linestrings_within_bbox_input(input_geojson_file, input_roi,\
                                                               shift_threshold=dim_threshold, switch_xy=False)
-            _ln_linetr = [LineString(ln) for ln in input_line_list]
+
+            extract_line_list, (_, _) = filter_linestrings_within_bbox_input(extract_geojson_file, input_roi,\
+                                                              shift_threshold=dim_threshold, switch_xy=False)
+            input_line_list_filter = [] # remove lines with sharp turns from input_line_list
+            for in_line in input_line_list:
+                max_line_curve, max_seg_length = max_curvature_segment_length([list(in_line.coords)])
+                if max_line_curve <= 90 or max_seg_length >= 30:
+                    continue
+                input_line_list_filter.append(in_line)
+            _ln_linetr = [LineString(ln) for ln in input_line_list_filter]
             ln_linetr = sorted(_ln_linetr, key=lambda ln: ln.length, reverse=True)
 
             grouped_lines = []
@@ -446,16 +455,23 @@ def process_geojson_to_paths(input_geojson_file, map_file, save_input_geojson_pa
                 if ln.length < 60:
                     continue
                 _matched_linestrings, _matched_length = \
-                    filter_linestrings_within_buffer(ext_ln, ln_linetr, buffer_distance=10)
+                    filter_linestrings_within_buffer(ext_ln, ln_linetr, buffer_distance=10, intersect_distance_threshold=0.0)
                 
                 matched_linestrings, matched_length = filter_noise_lines(_matched_linestrings, ext_ln, angle_threshold=5)
 #                 matched_linestrings, matched_length = further_filter_noise_lines(matched_linestrings, angle_threshold=30, \
 #                                                                                  dist_threshold=20)
-                
-                if matched_linestrings == [] or matched_length<min(ext_ln.length, PATCH_SIZE)//5 or matched_length<50: #
-                    matched_linestrings = [ln]
-                grouped_lines.append(matched_linestrings)
-#                 print(f"===== {cnt} =====")
+                matched_to_extract_linestrings = []
+                for mt_ln in matched_linestrings:
+                    in_len_ratio, out_len_ratio =\
+                            cal_length_similarity_input_output([mt_ln], extract_line_list, 10)
+                    if in_len_ratio < 0.6: 
+                        continue
+                    matched_to_extract_linestrings.append(mt_ln)
+                if len(matched_to_extract_linestrings) != 0:
+                    grouped_lines.append(matched_to_extract_linestrings)
+
+                # if _matched_linestrings == [] or _matched_length<min(ext_ln.length, PATCH_SIZE)//5 or _matched_length<50: #
+                #     _matched_linestrings = [ln]
                 cnt += 1
             dedup_grouped_lines = deduplicate_linestring_groups(grouped_lines)
 
