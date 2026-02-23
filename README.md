@@ -200,30 +200,55 @@ python fine_tune_large.py
 
 ## Inference
 
+The inference process is designed to be iterative, allowing the model to refine line geometries over multiple passes. Each iteration consists of generating input data from the previous step's output, running the model, and stitching the results back together.
 
-To run inference on new vector line data:
+### Step 1: Initial Inference (Iteration 0)
 
+The first step processes an initial input GeoJSON file, breaks it into patches, and runs the model on them.
 
 ```bash
 python iterative_inference.py \
-    --iteration 1 \
+    --iteration 0 \
     --map_dir ./data/maps \
     --in_geojson_dir ./data/inference_input_data \
     --out_geojson_dir ./inference_output_data \
     --in_geojson_name my_map_processed \
     --map_name my_map \
     --model_version 100 \
-    --cuda 1
+    --cuda 0
+```
+
+- **Output**: This will create a directory `./inference_output_data/my_map_iter0/` containing the processed results, including `my_map_post.geojson`.
+
+### Step 2: Iterative Refinement (Iteration > 0)
+
+Subsequent iterations use the output of the previous step (`_post.geojson`) as the new input, allowing for progressive refinement.
+
+```bash
+python iterative_inference.py \
+    --iteration 1 \
+    --map_dir ./data/maps \
+    --extract_geojson_dir ./data/inference_input_data \
+    --out_geojson_dir ./inference_output_data \
+    --in_geojson_name my_map_processed \
+    --map_name my_map \
+    --model_version 100 \
+    --cuda 0
+```
+- **How it works**: For `iteration 1`, the script automatically looks for the output from `iteration 0` (i.e., in `./inference_output_data/my_map_iter0/my_map_post.geojson`) to use as its input.
+- **`--extract_geojson_dir`**: This is required for iterative steps to reference the original, unprocessed lines for context.
+
 ```
 ### Parameters Explained
-- `--iteration`: Specifies which iteration of the inference process
-- `--map_dir`: Directory containing base map files
-- `--in_geojson_dir`: Input directory with GeoJSON files to process
-- `--out_geojson_dir`: Output directory where results will be saved
-- `--in_geojson_name`: Name of the input GeoJSON file (without extension)
-- `--map_name`: Name of the base map to use for inference
-- `--model_version`: Specific version of the LineLM to use, default is None
-- `--cuda`: Enables GPU acceleration, default is using CUDA device 1
+- `--iteration`: The current pass of the inference process (e.g., 0, 1, 2...).
+- `--map_dir`: Directory containing the base map image files (`.tif` or `.png`).
+- `--in_geojson_dir`: **(Iteration 0 only)** Directory containing the initial input GeoJSON file.
+- `--extract_geojson_dir`: **(Iteration > 0)** Directory of the *original* unprocessed GeoJSON, used for context in refinement steps.
+- `--out_geojson_dir`: The base directory where all output folders will be created (e.g., `my_map_iter0`, `my_map_iter1`).
+- `--in_geojson_name`: The name of the input GeoJSON file (without extension).
+- `--map_name`: The base name of the map, used for creating output directories and files.
+- `--model_version`: The specific epoch/version of the fine-tuned model to use.
+- `--cuda`: The ID of the CUDA device to use for GPU acceleration.
 
 
 
