@@ -67,14 +67,12 @@ if __name__ == "__main__":
     #### Inference
     ######################################
     model_version = args.model_version
-    # # inference(iteration, map_dir, map_name, model_epoch=model_version, cuda=args.cuda)
     inference_multiprocess(iteration, map_dir, map_name, model_epoch=model_version, num_processes=8, cuda_devices=[args.cuda], chunk_size=100)
     
     ######################################
     #### Stitch the Patch-level results to 
     #### Map-level
     ######################################
-    # stitch_results_on_patches(iteration, map_name, stitch_buffer=10)
     stitch_results_on_patches_multiprocess(iteration, map_name, stitch_buffer=10)
 
     ######################################
