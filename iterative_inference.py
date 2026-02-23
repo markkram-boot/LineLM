@@ -69,11 +69,6 @@ if __name__ == "__main__":
     model_version = args.model_version
     # # inference(iteration, map_dir, map_name, model_epoch=model_version, cuda=args.cuda)
     inference_multiprocess(iteration, map_dir, map_name, model_epoch=model_version, num_processes=8, cuda_devices=[args.cuda], chunk_size=100)
-
-    ######################################
-    #### Postprocess
-    ######################################
-##     postprocess(iteration, map_dir, map_name)
     
     ######################################
     #### Stitch the Patch-level results to 
