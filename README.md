@@ -133,7 +133,7 @@ You can download the GeoJSON files for both pretraining and fine-tuning from [th
 ### 2. Pre-training
 
 
-Run the pre-training script to learn general trajectory representations:
+Pre-training enables LineLM to learn the intrinsic structure patterns of vector line geometries in a self-supervised manner. This foundational understanding is crucial before fine-tuning for specific tasks. LineLM is trained using a **Masked Language Modeling (MLM)** approach. Run the pre-training script to learn general trajectory representations:
 
 
 ```bash
@@ -144,7 +144,7 @@ python pretrain_bert_large.py
 ### 3. Fine-tuning
 
 
-Run the fine-tuning script for sequence-to-sequence learning:
+After pre-training, fine-tune LineLM on a specific task, i.e., refining broken vector lines. The script (fine_tune_large.py) loads the pre-trained weights and trains the full encoder-decoder model on your paired dataset (noisy lines and their clean counterparts). Run the fine-tuning script for sequence-to-sequence learning:
 
 
 ```bash
@@ -200,7 +200,8 @@ python fine_tune_large.py
 
 ## Inference
 
-The inference process is designed to be iterative, allowing the model to refine line geometries over multiple passes. Each iteration consists of generating input data from the previous step's output, running the model, and stitching the results back together.
+
+The inference process is designed to be iterative, allowing LineLM to refine line geometries over multiple passes. Each iteration consists of generating input data from the previous step's output, running LineLM, and stitching the results back together at the map-level.
 
 ### Step 1: Initial Inference (Iteration 0)
 
@@ -238,7 +239,7 @@ python iterative_inference.py \
 - **How it works**: For `iteration 1`, the script automatically looks for the output from `iteration 0` (i.e., in `./inference_output_data/my_map_iter0/my_map_post.geojson`) to use as its input.
 - **`--extract_geojson_dir`**: This is required for iterative steps to reference the original, unprocessed lines for context.
 
-```
+
 ### Parameters Explained
 - `--iteration`: The current pass of the inference process (e.g., 0, 1, 2...).
 - `--map_dir`: Directory containing the base map image files (`.tif` or `.png`).
@@ -256,28 +257,6 @@ python iterative_inference.py \
 ### Inference Data
 You can download the GeoJSON files for inference from [this link](https://drive.google.com/drive/folders/1QHs0uDjItz47S_q8X3MoCzeJwuL61lF9?usp=sharing).
 
-
-
-
-## Troubleshooting
-
-
-### Common Issues
-
-
-1. **CUDA Out of Memory**: Reduce `batch_size` in the training scripts
-2. **File Not Found**: Ensure data files are in the correct `./data/` directory
-3. **Token Index Errors**: Verify that coordinate values fall within the valid vocab_size range, i.e., [0, 500]
-
-
-### Memory Optimization
-
-
-For limited GPU memory:
-- Reduce `batch_size`
-- Reduce `hidden_size` 
-- Reduce `num_hidden_layers`
-- Use gradient accumulation
 
 
 ## License
