@@ -43,6 +43,7 @@ def load_linestring_from_geojson_for_finetune(file_path):
     trajectories = []
     shifts = []
     patch_xys = []
+    reference_lines = []
     for feature in geojson_data['features']:
         multilinestring = feature['geometry']
         sample = []
@@ -59,8 +60,13 @@ def load_linestring_from_geojson_for_finetune(file_path):
         patch_xys.append(
             (int(feature['properties'].get('patch_x', 0)), int(feature['properties'].get('patch_y', 0)))
             if feature.get('properties') else (0, 0)
-)
-    return trajectories, shifts, patch_xys
+        )
+    
+        reference_lines.append(
+            [(int(x), int(y)) for x, y in feature['properties'].get('reference_line', [])]
+        )
+
+    return trajectories, shifts, patch_xys, reference_lines
 
 def normalize_linestring_orientation(line):
     """
@@ -181,6 +187,31 @@ def convert_prediction_to_multilinestring(coord_list, max_id=500):
         lines.append(segment)
 
     return lines
+
+def convert_tensor_input_to_multilinestring(tensor_input, max_id=500):
+    """
+    Convert tensor input to multilinestring format.
+    
+    Args:
+        tensor_input: List of tensors like [tensor([0]), tensor([136])]
+        max_id: Maximum ID value for coordinate mapping
+    
+    Returns:
+        List of multilinestring coordinates
+    """
+    # Convert tensors to regular integers
+    sequence = []
+    
+    for tensor_pair in tensor_input:
+        if len(tensor_pair) >= 2:
+            x = tensor_pair[0].item() if hasattr(tensor_pair[0], 'item') else int(tensor_pair[0])
+            y = tensor_pair[1].item() if hasattr(tensor_pair[1], 'item') else int(tensor_pair[1])
+            sequence.append((x, y))
+    if len(sequence) < 2:
+        # Return empty list if sequence has less than 2 points
+        return []
+
+    return [sequence]
 
 def save_line_groups_to_geojson(line_patch_groups, output_path):
     """
