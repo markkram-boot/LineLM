@@ -173,11 +173,11 @@ python fine_tune_large.py
 ### Pre-trained Models
 
 
-| Model | Description | Download Link | Size |
-|-------|-------------|---------------|------|
-| Pretrain| BERT encoder pre-trained on vector lines | [Download](https://drive.google.com/file/d/1URW3_fCFvG2n8tBJzoZaA6a8pPAUwpoD/view?usp=sharing) | 642.7MB |
-| Fine-tune | Large model fine-tuned for line refinement | [Download](https://drive.google.com/file/d/1oyG5gUpbNfkEiF08WofpGyZMsDEyrFUo/view?usp=sharing) | 1.13GB |
-
+| Model Type | Use Case | Download Link | Size |
+| :--- | :--- | :--- | :--- |
+| **Pre-trained Encoder** | Foundational model for custom fine-tuning. | [Download](https://drive.google.com/file/d/1URW3_fCFvG2n8tBJzoZaA6a8pPAUwpoD/view?usp=sharing) | 642.7MB |
+| **Fine-tuned (Gaps)** | For refining lines with many gaps and connectivity issues. | [Download](https://drive.google.com/file/d/1oyG5gUpbNfkEiF08WofpGyZMsDEyrFUo/view?usp=sharing) | 1.13GB |
+| **Fine-tuned (Distortion)** | For refining lines with many branches and distorted geometry. | [Download](https://drive.google.com/file/d/1-x5LMScCSeUXf62iT_wYegYp56-Mpw3W/view?usp=sharing) | 1.13GB |
 
 ### Model Card
 
